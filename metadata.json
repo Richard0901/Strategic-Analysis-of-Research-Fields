@@ -1,0 +1,5 @@
+{
+  "name": "Academic Strategist AI",
+  "description": "A deep strategic analysis tool for academic research fields, utilizing Gemini 3 Pro to identify Blue Oceans, No Man's Lands, and innovative cross-disciplinary opportunities.",
+  "requestFramePermissions": []
+}

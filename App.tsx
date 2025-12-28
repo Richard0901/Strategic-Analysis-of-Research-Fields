@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import AnalysisForm from './components/AnalysisForm';
 import AnalysisResult from './components/AnalysisResult';
+import { SettingsModal } from './components/SettingsModal';
 import { analyzeResearchField } from './services/geminiService';
-import { BrainCircuit } from 'lucide-react';
+import { BrainCircuit, Settings } from 'lucide-react';
+import { ApiSettings, DEFAULT_SETTINGS } from './types';
 
 const App: React.FC = () => {
   const [field, setField] = useState('');
@@ -10,6 +12,10 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Settings State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<ApiSettings>(DEFAULT_SETTINGS);
 
   const handleAnalysis = async () => {
     setIsLoading(true);
@@ -19,11 +25,12 @@ const App: React.FC = () => {
     try {
       const analysisText = await analyzeResearchField({
         field: field,
-        literatureData: literature
+        literatureData: literature,
+        settings: settings
       });
       setResult(analysisText);
     } catch (err: any) {
-      setError(err.message || '分析服务暂时不可用，请稍后重试或检查 API Key。');
+      setError(err.message || '分析服务暂时不可用，请稍后重试或检查 API 配置。');
     } finally {
       setIsLoading(false);
     }
@@ -31,6 +38,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings}
+        onSave={setSettings}
+      />
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -43,10 +57,22 @@ const App: React.FC = () => {
               <p className="text-xs text-slate-500 font-medium tracking-wide">AI 驱动的科研战略分析系统</p>
             </div>
           </div>
-          <div className="hidden sm:block">
-            <span className="inline-flex items-center rounded-full bg-academic-50 px-3 py-1 text-xs font-medium text-academic-700 ring-1 ring-inset ring-academic-600/20">
-              由 Gemini 3.0 Pro 驱动
-            </span>
+          <div className="flex items-center gap-4">
+             <div className="hidden sm:block">
+              <span className="inline-flex items-center rounded-full bg-academic-50 px-3 py-1 text-xs font-medium text-academic-700 ring-1 ring-inset ring-academic-600/20">
+                {settings.provider === 'google' 
+                  ? `Gemini: ${settings.modelName}` 
+                  : `OpenAI: ${settings.modelName}`
+                }
+              </span>
+            </div>
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 text-slate-500 hover:text-academic-600 hover:bg-slate-50 rounded-lg transition-colors"
+              title="API 设置"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>

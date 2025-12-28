@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Download, FileText, Sparkles } from 'lucide-react';
+import { Download, FileText, Sparkles, Copy, Check, Printer } from 'lucide-react';
 
 interface AnalysisResultProps {
   result: string | null;
@@ -9,6 +9,32 @@ interface AnalysisResultProps {
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ result, error }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(result);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!result) return;
+    const blob = new Blob([result], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'academic-strategy-analysis.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (error) {
     return (
       <div className="h-full flex items-center justify-center bg-white rounded-xl border border-red-100 shadow-sm p-8">
@@ -44,13 +70,38 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ result, error }) => {
           <FileText className="w-5 h-5" />
           <h2 className="font-serif font-bold text-lg">战略分析报告</h2>
         </div>
-        <button 
-          onClick={() => window.print()}
-          className="text-slate-500 hover:text-academic-600 hover:bg-slate-50 p-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
-        >
-          <Download className="w-4 h-4" />
-          导出/打印
-        </button>
+        
+        <div className="flex items-center gap-2">
+          {/* Copy Button */}
+          <button 
+            onClick={handleCopy}
+            className="text-slate-500 hover:text-academic-600 hover:bg-slate-50 p-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
+            title="复制 Markdown 原文"
+          >
+            {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isCopied ? '已复制' : '复制'}</span>
+          </button>
+
+          {/* Download Button */}
+          <button 
+            onClick={handleDownload}
+            className="text-slate-500 hover:text-academic-600 hover:bg-slate-50 p-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
+            title="下载 Markdown 文件"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">下载 MD</span>
+          </button>
+
+          {/* Print Button */}
+          <button 
+            onClick={() => window.print()}
+            className="text-slate-500 hover:text-academic-600 hover:bg-slate-50 p-2 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
+            title="打印或保存为 PDF"
+          >
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">打印</span>
+          </button>
+        </div>
       </div>
       
       <div className="flex-grow overflow-y-auto p-8 md:p-12 bg-slate-50/50">
